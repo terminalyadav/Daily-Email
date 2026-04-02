@@ -7,7 +7,7 @@ Automated influencer email collection system with a full web dashboard.
 ```
 Google Sheets → GitHub Actions (daily 9 AM IST) → data/*.json
                                                       ↓
-                                         FastAPI (Render) ← React (Vercel)
+                                         FastAPI (Vercel) ← React (Vercel)
 ```
 
 ## Project Structure
@@ -17,11 +17,11 @@ Google Sheets → GitHub Actions (daily 9 AM IST) → data/*.json
 │   ├── main.py          # FastAPI API
 │   ├── processor.py     # Email processor (replaces all calculate_*.py)
 │   ├── requirements.txt
-│   └── render.yaml      # Render deploy config
+│   └── vercel.json      # Vercel serverless config for Python
 ├── frontend/
 │   ├── src/App.jsx      # Dashboard UI
 │   ├── src/App.css      # Dark-mode styles
-│   └── vercel.json
+│   └── vercel.json      # SPA routing config
 ├── data/                # Daily JSON files (auto-generated)
 ├── .github/workflows/
 │   └── daily_report.yml # Daily cron at 9 AM IST
@@ -30,64 +30,39 @@ Google Sheets → GitHub Actions (daily 9 AM IST) → data/*.json
 
 ---
 
-## 🚀 Deployment Guide (One-Time Setup)
+## 🚀 Deployment Guide
 
-### Step 1 — Create GitHub Private Repo
+### Step 1 — Add GitHub Secret
 
-```bash
-git init
-git add .
-git commit -m "Initial commit"
-# Create private repo on GitHub, then:
-git remote add origin https://github.com/YOUR_USERNAME/daily-email.git
-git push -u origin main
-```
-
-### Step 2 — Add GitHub Secret
-
-Go to: **GitHub Repo → Settings → Secrets → Actions → New secret**
+Go to: **GitHub Repo (`terminalyadav/Daily-Email`) → Settings → Secrets and variables → Actions → New repository secret**
 
 | Name | Value |
 |------|-------|
 | `GOOGLE_CREDENTIALS_JSON` | Paste entire content of `service-account-key.json` |
 
-### Step 3 — Deploy Backend (Render)
+### Step 2 — Deploy Backend (Vercel)
 
-1. Go to [render.com](https://render.com) → New → Web Service
-2. Connect your GitHub repo
+1. Go to [vercel.com](https://vercel.com) → Add New... → Project
+2. Import `terminalyadav/Daily-Email`
 3. Settings:
+   - **Framework Preset**: Other
    - **Root Directory**: `backend`
-   - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `uvicorn main:app --host 0.0.0.0 --port $PORT`
-4. Add env var: `GOOGLE_CREDENTIALS_JSON` = paste service account JSON
-5. Deploy! Note your URL: `https://xxx.onrender.com`
+4. Deploy! Note your URL (e.g. `https://daily-email-backend.vercel.app`)
 
-### Step 4 — Deploy Frontend (Vercel)
+### Step 3 — Deploy Frontend (Vercel)
 
-1. Update `frontend/.env.production`: set `VITE_API_URL=https://xxx.onrender.com`
-2. Commit + push
-3. Go to [vercel.com](https://vercel.com) → New Project → Import GitHub repo
+1. You can update `frontend/.env.production` with your backend URL: `VITE_API_URL=https://...` and push, OR use Vercel environment variables.
+2. Go to [vercel.com](https://vercel.com) → Add New... → Project
+3. Import `terminalyadav/Daily-Email`
 4. Settings:
+   - **Framework Preset**: Vite
    - **Root Directory**: `frontend`
-   - **Build Command**: `npm run build`
-   - **Output Directory**: `dist`
-5. Add env var: `VITE_API_URL` = your Render backend URL
-6. Deploy!
+   - Add Vercel Environment Variable: `VITE_API_URL` = `https://your-backend-url.vercel.app`
+5. Deploy!
 
-### Step 5 — Migrate Historical Data (One Time)
+### Step 4 — Run GitHub Action
 
-```bash
-cd "/home/ashutosh-yadav/Desktop/Daily Email"
-source venv/bin/activate
-python migrate_historical.py
-git add data/
-git commit -m "chore: add historical data"
-git push
-```
-
-### Step 6 — Test GitHub Action
-
-GitHub → Actions → "Daily Email Report" → **Run workflow**
+GitHub → Actions → "Daily Email Report" → **Run workflow** -> This generates today's data!
 
 ---
 
