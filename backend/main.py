@@ -34,8 +34,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# data/ folder lives one level above backend/
-DATA_DIR = Path(__file__).parent.parent / "data"
+# data/ folder now resides inside backend/
+DATA_DIR = Path(__file__).parent / "data"
 
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────

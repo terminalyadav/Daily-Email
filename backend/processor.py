@@ -15,7 +15,7 @@ from google.oauth2.service_account import Credentials
 SPREADSHEET_ID = os.getenv("SPREADSHEET_ID", "1Q8Pw_a88RRZZ9dpaREMAgf5b0RqRqSkQdaJsLGWivMw")
 SHEET_NAMES    = ["TikTok", "Instagram", "Instagram(Ash)", "Tik-Tok(Ash)"]
 KEY_FILE       = os.path.join(os.path.dirname(__file__), "..", "service-account-key.json")
-DATA_DIR       = os.path.join(os.path.dirname(__file__), "..", "data")
+DATA_DIR       = os.path.join(os.path.dirname(__file__), "data")
 
 # When running in GitHub Actions / Render, credentials come from env var
 CREDS_JSON_ENV = "GOOGLE_CREDENTIALS_JSON"
