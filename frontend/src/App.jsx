@@ -42,6 +42,8 @@ export default function App() {
   const [sortCol, setSortCol]       = useState('username')
   const [sortAsc, setSortAsc]       = useState(true)
   const [error, setError]           = useState(null)
+  const [isTriggering, setIsTriggering] = useState(false)
+  const [triggerMsg, setTriggerMsg] = useState(null)
 
   // Load dates list + stats on mount
   useEffect(() => {
@@ -78,6 +80,25 @@ export default function App() {
     URL.revokeObjectURL(url)
   }, [selectedDate])
 
+  const handleTrigger = useCallback(async () => {
+    setIsTriggering(true)
+    setTriggerMsg(null)
+    setError(null)
+    try {
+      const res = await fetch(`${API_BASE}/api/trigger`, { method: 'POST' })
+      if (!res.ok) {
+        const data = await res.json()
+        setError(data.detail || 'Failed to trigger background job.')
+      } else {
+        setTriggerMsg('Background job started! Dashboard will update in ~30s. Please refresh manually or wait.')
+      }
+    } catch (e) {
+      setError('Network error: Is backend running?')
+    } finally {
+      setIsTriggering(false)
+    }
+  }, [])
+
   const toggleSort = (col) => {
     if (sortCol === col) setSortAsc(a => !a)
     else { setSortCol(col); setSortAsc(true) }
@@ -110,14 +131,20 @@ export default function App() {
             <p className="sub">Influencer outreach — fresh leads per day</p>
           </div>
         </div>
-        {selectedDate && (
-          <button className="btn-download" onClick={handleDownload}>
-            ⬇ Download .xlsx
+        <div className="header-right" style={{ display: 'flex', gap: '10px' }}>
+          <button className={`btn-trigger ${isTriggering ? 'loading' : ''}`} onClick={handleTrigger} disabled={isTriggering}>
+            {isTriggering ? '⏳ Processing...' : '🔄 Fetch Latest Data'}
           </button>
-        )}
+          {selectedDate && (
+            <button className="btn-download" onClick={handleDownload}>
+              ⬇ Download .xlsx
+            </button>
+          )}
+        </div>
       </header>
 
       {error && <div className="error-banner">⚠️ {error}</div>}
+      {triggerMsg && <div className="success-banner">✨ {triggerMsg}</div>}
 
       {/* Overall stats */}
       {stats && (

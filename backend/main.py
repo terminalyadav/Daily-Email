@@ -10,6 +10,8 @@ Endpoints:
 import io
 import json
 import os
+import urllib.request
+import urllib.error
 from datetime import datetime
 from pathlib import Path
 
@@ -17,6 +19,10 @@ import pandas as pd
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+
+# ─── Config ──────────────────────────────────────────────────────────────────
+GITHUB_TOKEN = os.getenv("GITHUB_PAT", "")
+GITHUB_REPO  = os.getenv("GITHUB_REPO", "terminalyadav/Daily-Email")
 
 # ─── App setup ───────────────────────────────────────────────────────────────
 app = FastAPI(title="Daily Email Dashboard API", version="1.0.0")
@@ -166,3 +172,29 @@ def download_xlsx(date_str: str):
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+@app.post("/api/trigger")
+def trigger_github_workflow():
+    """Trigger the GitHub Action manually to fetch fresh latest emails."""
+    if not GITHUB_TOKEN:
+        raise HTTPException(status_code=500, detail="Backend configuration missing: GITHUB_PAT is not set.")
+    
+    url = f"https://api.github.com/repos/{GITHUB_REPO}/actions/workflows/daily_report.yml/dispatches"
+    headers = {
+        "Authorization": f"token {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3+json",
+        "Content-Type": "application/json"
+    }
+    data = json.dumps({"ref": "main"}).encode("utf-8")
+    
+    req = urllib.request.Request(url, data=data, headers=headers, method="POST")
+    try:
+        urllib.request.urlopen(req)
+        return {"status": "ok", "message": "Triggered successfully."}
+    except urllib.error.HTTPError as e:
+        err_msg = e.read().decode("utf-8")
+        raise HTTPException(status_code=e.code, detail=f"Failed to trigger workflow: {err_msg}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
