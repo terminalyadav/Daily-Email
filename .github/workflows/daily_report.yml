@@ -1,0 +1,46 @@
+name: Daily Email Report
+
+on:
+  schedule:
+    # 3:30 AM UTC = 9:00 AM IST (Indian Standard Time)
+    - cron: "30 3 * * *"
+  workflow_dispatch:   # allows manual trigger from GitHub UI
+
+jobs:
+  generate-report:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r backend/requirements.txt
+
+      - name: Write Google credentials
+        run: echo '${{ secrets.GOOGLE_CREDENTIALS_JSON }}' > service-account-key.json
+
+      - name: Run processor
+        env:
+          SPREADSHEET_ID: "1Q8Pw_a88RRZZ9dpaREMAgf5b0RqRqSkQdaJsLGWivMw"
+        run: python backend/processor.py
+
+      - name: Commit daily JSON to repo
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/
+          git diff --staged --quiet || git commit -m "chore: daily email report $(date -u +%Y-%m-%d)"
+
+      - name: Push changes
+        uses: ad-m/github-push-action@v0.8.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: main

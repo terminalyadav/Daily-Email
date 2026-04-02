@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+venv/
+.env
+*.egg-info/
+
+# Google credentials — NEVER commit this
+service-account-key.json
+
+# Excel lock files
+.~lock.*.xlsx#
+
+# Node / frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env.production
+
+# OS
+.DS_Store
+Thumbs.db
