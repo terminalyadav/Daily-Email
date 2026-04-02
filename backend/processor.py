@@ -8,7 +8,7 @@ import re
 import json
 import gspread
 import pandas as pd
-from datetime import date, datetime
+from datetime import date, datetime, timezone, timedelta
 from google.oauth2.service_account import Credentials
 
 # ─── Config ──────────────────────────────────────────────────────────────────
@@ -150,7 +150,8 @@ def process_for_date(target_date: date | None = None) -> dict:
     Returns the day's result dict.
     """
     if target_date is None:
-        target_date = date.today()
+        ist_tz = timezone(timedelta(hours=5, minutes=30))
+        target_date = datetime.now(ist_tz).date()
     date_str = target_date.strftime("%Y-%m-%d")
     out_path  = os.path.join(DATA_DIR, f"{date_str}.json")
 
